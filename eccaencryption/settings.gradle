@@ -1,0 +1,3 @@
+include ':ecc-library'
+include ':app'
+rootProject.name = "ecca-encryption"
