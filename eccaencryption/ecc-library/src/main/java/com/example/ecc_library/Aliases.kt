@@ -2,9 +2,7 @@ package com.example.ecc_library
 
 object Aliases {
 
-        val androidKeyStoreName = "AndroidKeyStore"
-        val androidKeyStoreAlias = "AES_KEY"
-        val ecdhKeysStoreAlias = ""
-
-
+        const val androidKeyStoreName = "AndroidKeyStore"
+        const val androidKeyStoreAlias = "AES_KEY"
+        const val ecdhKeysStoreAlias = ""
 }

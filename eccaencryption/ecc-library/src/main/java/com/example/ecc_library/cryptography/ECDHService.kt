@@ -1,6 +1,8 @@
 package com.example.ecc_library.cryptography
 
 import android.content.Context
+import android.os.Build
+import android.support.annotation.RequiresApi
 import com.example.ecc_library.Aliases
 import com.yourapp.android.crypto.KeyManager
 import java.security.*
@@ -13,6 +15,7 @@ import javax.crypto.spec.SecretKeySpec
 
 class ECDHService(private val ctx: Context, private val ecdhKeysStore: ECDHKeysStore) : CryptographicService {
 
+    @RequiresApi(Build.VERSION_CODES.O)
     @Throws(
         InvalidKeyException::class,
         NoSuchAlgorithmException::class,
