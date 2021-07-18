@@ -1,7 +1,7 @@
 package com.example.ecc_library.cryptography
 
 import android.os.Build
-import android.support.annotation.RequiresApi
+import androidx.annotation.RequiresApi
 import com.example.ecc_library.Aliases
 import com.google.gson.Gson
 import java.security.*

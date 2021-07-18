@@ -1,22 +1,17 @@
 package com.example.ecca_encryption.entities
 
-import javax.persistence.*
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.Index
+import androidx.room.PrimaryKey
 
-@Entity
-class User(
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Int,
 
-    @Column(nullable = false)
-    val name: String,
-
-    @Column(nullable = false)
-    val surname: String,
-
-    @Column(nullable = false)
-    val login: String,
-
-    @Column(nullable = false)
-    val password: String
+@Entity(tableName = "user", indices = [Index(value = ["id"], unique = true)])
+data class User(
+    @PrimaryKey val id: Long? = null,
+    @ColumnInfo(name = "first_name") val firstName: String? = null,
+    @ColumnInfo(name = "last_name") val lastName: String? = null,
+    @ColumnInfo(name = "height") val height: Double? = null,
+    @ColumnInfo(name = "weight") val weight: Double? = null,
+    @ColumnInfo(name = "cv_info") val cvInfo: String? = null
 )

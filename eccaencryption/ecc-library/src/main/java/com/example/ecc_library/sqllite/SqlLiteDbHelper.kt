@@ -5,7 +5,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.os.Build
 import android.provider.BaseColumns
-import android.support.annotation.RequiresApi
+import androidx.annotation.RequiresApi
 import com.example.ecc_library.Aliases
 import com.example.ecc_library.cryptography.AndroidKeyGenerator
 import com.example.ecc_library.cryptography.ECDHKeysStore
