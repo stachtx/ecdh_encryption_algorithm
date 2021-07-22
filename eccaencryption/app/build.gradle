@@ -14,7 +14,7 @@ android {
 
     defaultConfig {
         applicationId "com.example.ecca_encryption"
-        minSdkVersion 21
+        minSdkVersion 26
         targetSdkVersion 30
         versionCode 1
         versionName "1.0"
@@ -40,7 +40,7 @@ android {
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    implementation 'androidx.core:core-ktx:1.3.1'
+    implementation 'androidx.core:core-ktx:1.6.0'
     implementation 'androidx.appcompat:appcompat:1.3.0'
     implementation 'androidx.fragment:fragment-ktx:1.3.5'
     implementation 'androidx.navigation:navigation-fragment-ktx:2.3.5'
@@ -60,16 +60,15 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-    implementation "androidx.room:room-ktx:2.3.0"
-    compileOnly 'org.projectlombok:lombok:1.18.20'
-    annotationProcessor 'org.projectlombok:lombok:1.18.20'
 
-    testCompileOnly 'org.projectlombok:lombok:1.18.20'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.18.20'
+
+    implementation "androidx.room:room-ktx:2.3.0"
+    implementation "androidx.room:room-runtime:2.3.0"
+    kapt "androidx.room:room-compiler:2.3.0"
+    implementation 'net.zetetic:android-database-sqlcipher:4.4.3'
+    implementation("androidx.security:security-crypto:1.0.0")
+
+    implementation("androidx.annotation:annotation:1.2.0")
 
     implementation project(':ecc-library')
-
-
-
-
 }

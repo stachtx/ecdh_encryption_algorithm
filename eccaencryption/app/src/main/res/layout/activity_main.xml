@@ -56,11 +56,25 @@
                     android:text="@string/encrypted" />
 
                 <RadioButton
+                    android:id="@+id/encrypted_aes"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:duplicateParentState="true"
+                    android:text="@string/encrypted_aes" />
+
+                <RadioButton
                     android:id="@+id/encrypted_with_memory_security"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:duplicateParentState="true"
                     android:text="@string/encrypted_with_memory_security" />
+
+                <RadioButton
+                    android:id="@+id/encrypted_with_memory_security_aes"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:duplicateParentState="true"
+                    android:text="@string/encrypted_with_memory_security_aes" />
 
                 <RadioButton
                     android:id="@+id/run_all"

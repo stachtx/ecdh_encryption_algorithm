@@ -1,17 +1,24 @@
 package com.example.ecc_library.cryptography
 
-import android.os.Build
-import androidx.annotation.RequiresApi
+import android.annotation.SuppressLint
+import android.util.Base64
 import com.example.ecc_library.Aliases
-import com.google.gson.Gson
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
 import java.security.*
-import java.util.*
 import javax.crypto.Cipher
 import javax.crypto.SecretKey
+import javax.crypto.spec.IvParameterSpec
 
-class ECDHKeysStore {
+
+object ECDHKeysStore {
 
     private val ecdhKeysStore: Map<String, ByteArray> = emptyMap()
+
+    private const val ALGORITHM = "EC"
+    private const val TRANSFORMATION = "AES/CBC/PKCS7Padding"
 
     fun createECDHKey(alias: String) {
         val keyPair = generateECKeys()
@@ -19,7 +26,6 @@ class ECDHKeysStore {
         ecdhKeysStore.plus(Pair(alias, encryptedKeyPair))
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun getECDHKey(alias: String): KeyPair? {
         val storedKey = ecdhKeysStore.get(alias)
         return decryptECDHKey(storedKey)
@@ -43,33 +49,34 @@ class ECDHKeysStore {
     }
 
     private fun encryptECDHKey(keyPair: KeyPair?): ByteArray {
-        val data = Gson().toJson(keyPair)
-        return cipher(data.toByteArray(), Cipher.ENCRYPT_MODE)
+        val b = ByteArrayOutputStream()
+        val o = ObjectOutputStream(b)
+        o.writeObject(keyPair)
+        return cipher(Base64.encode(b.toByteArray(), Base64.DEFAULT), Cipher.ENCRYPT_MODE)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun decryptECDHKey(data: ByteArray?): KeyPair? {
-        val value = Base64.getEncoder().encodeToString(cipher(data, Cipher.DECRYPT_MODE))
-        return Gson().fromJson(value,KeyPair::class.java)
+        val bi = ByteArrayInputStream(Base64.decode(cipher(data, Cipher.DECRYPT_MODE), Base64.DEFAULT))
+        val oi = ObjectInputStream(bi)
+        return oi.readObject() as KeyPair
     }
-   
+
+    @SuppressLint("GetInstance")
     private fun cipher(data: ByteArray?, mode: Int): ByteArray {
+        val r = SecureRandom()
+        val ivBytes = ByteArray(16)
+        r.nextBytes(ivBytes)
         val secretKey = getKey()
         val cipher = Cipher.getInstance(TRANSFORMATION)
-        cipher.init(Cipher.ENCRYPT_MODE, secretKey)
+        cipher.init(mode, secretKey,  IvParameterSpec(ivBytes))
         return cipher.doFinal(data)
     }
-    
+
     private fun getKey(): SecretKey {
         val keystore = KeyStore.getInstance(Aliases.androidKeyStoreName)
         keystore.load(null)
         val secretKeyEntry =
-            keystore.getEntry(Aliases.androidKeyStoreAlias, null) as KeyStore.SecretKeyEntry
+            keystore.getEntry(Aliases.androidKeyStoreAliasForECDH, null) as KeyStore.SecretKeyEntry
         return secretKeyEntry.secretKey;
-    }
-
-    companion object  {
-        const val ALGORITHM = "EC"
-        const val TRANSFORMATION = "AES"
     }
 }

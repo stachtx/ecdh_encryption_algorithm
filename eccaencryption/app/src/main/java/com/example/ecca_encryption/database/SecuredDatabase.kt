@@ -1,22 +1,24 @@
-package com.example.ecc_library.sqllite
+package com.example.ecca_encryption.database
 
 import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.room.DatabaseConfiguration
-import androidx.room.InvalidationTracker
-import androidx.room.Room
-import androidx.room.RoomDatabase
-import androidx.sqlite.db.SupportSQLiteOpenHelper
+import androidx.room.*
 import com.example.ecc_library.Aliases
 import com.example.ecc_library.cryptography.ECDHKeysStore
+import com.example.ecca_encryption.entities.User
+import com.example.ecca_encryption.entities.UserDao
 import net.sqlcipher.database.SQLiteDatabase
 import net.sqlcipher.database.SQLiteDatabaseHook
 import net.sqlcipher.database.SupportFactory
 
- abstract class SecuredDatabase : RoomDatabase() {
+@Database(entities = [User::class], version = 1)
+abstract class SecuredDatabase : RoomDatabase() {
+
+    abstract fun userDao(): UserDao
 
     companion object {
+
         @Volatile
         private var securedDB: SecuredDatabase? = null
 
@@ -26,11 +28,7 @@ import net.sqlcipher.database.SupportFactory
         @Volatile
         private var securedDBSecureWithMemorySecurity: SecuredDatabase? = null
 
-        @Volatile
-        private var ecdhKeysStore:ECDHKeysStore? = null
-
-        @RequiresApi(Build.VERSION_CODES.O)
-        open fun getInstance(
+        fun getInstance(
             context: Context,
             secure: Boolean = false,
             memorySecure: Boolean = false
@@ -41,7 +39,6 @@ import net.sqlcipher.database.SupportFactory
                         securedDBSecure ?: buildDatabase(
                             context,
                             secure,
-                            ecdhKeysStore,
                             memorySecure
                         ).also { securedDBSecure = it }
                     }
@@ -50,23 +47,22 @@ import net.sqlcipher.database.SupportFactory
                         securedDBSecureWithMemorySecurity ?: buildDatabase(
                             context,
                             secure,
-                            ecdhKeysStore,
                             memorySecure
                         ).also { securedDBSecureWithMemorySecurity = it }
                     }
                 }
             } else {
                 securedDB ?: synchronized(this) {
-                    securedDB ?: buildDatabase(context, secure, ecdhKeysStore).also { securedDB = it }
+                    securedDB ?: buildDatabase(context, secure).also {
+                        securedDB = it
+                    }
                 }
             }
         }
 
-        @RequiresApi(Build.VERSION_CODES.O)
         private fun buildDatabase(
             context: Context,
             secure: Boolean,
-            ecdhKeysStore: ECDHKeysStore?,
             memorySecure: Boolean = false
         ): SecuredDatabase {
             val dbname = if (secure && memorySecure) {
@@ -81,8 +77,7 @@ import net.sqlcipher.database.SupportFactory
                 SecuredDatabase::class.java, "${dbname}.db"
             )
             if (secure) {
-                val passphrase: ByteArray? =
-                    ecdhKeysStore?.getECDHKey(Aliases.ecdhKeysStoreAlias)?.public?.encoded
+                val passphrase: ByteArray? = ECDHKeysStore.getECDHKey(Aliases.ecdhKeysStoreAlias)?.public?.encoded
                 val factory = SupportFactory(passphrase, object : SQLiteDatabaseHook {
                     override fun preKey(database: SQLiteDatabase?) = Unit
 
@@ -98,20 +93,7 @@ import net.sqlcipher.database.SupportFactory
                 })
                 builder.openHelperFactory(factory)
             }
-
             return builder.build()
         }
-    }
-
-    override fun createOpenHelper(config: DatabaseConfiguration?): SupportSQLiteOpenHelper {
-        TODO("Not yet implemented")
-    }
-
-    override fun createInvalidationTracker(): InvalidationTracker {
-        TODO("Not yet implemented")
-    }
-
-    override fun clearAllTables() {
-        TODO("Not yet implemented")
     }
 }

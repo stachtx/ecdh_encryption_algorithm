@@ -15,6 +15,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.observe
 import androidx.savedstate.SavedStateRegistryOwner
+import com.example.ecc_library.Aliases
+import com.example.ecc_library.cryptography.AndroidKeyAESGenerator
+import com.example.ecc_library.cryptography.ECDHKeysStore
 import com.example.ecca_encryption.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -27,6 +30,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AndroidKeyAESGenerator.generateKey(Aliases.androidKeyStoreAliasForECDH)
+        AndroidKeyAESGenerator.generateKey(Aliases.androidKeyStoreAlias)
+        ECDHKeysStore.createECDHKey(Aliases.ecdhKeysStoreAlias)
 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
 
@@ -146,6 +152,7 @@ class MainActivityViewModelFactory(
         modelClass: Class<T>,
         handle: SavedStateHandle
     ): T {
+
         return MainActivityViewModel(context) as T
     }
 }

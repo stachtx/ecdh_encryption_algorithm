@@ -4,5 +4,6 @@ object Aliases {
 
         const val androidKeyStoreName = "AndroidKeyStore"
         const val androidKeyStoreAlias = "AES_KEY"
-        const val ecdhKeysStoreAlias = ""
+        const val androidKeyStoreAliasForECDH = "AES_ECDH_KEY"
+        const val ecdhKeysStoreAlias = "ECDH_KEY"
 }

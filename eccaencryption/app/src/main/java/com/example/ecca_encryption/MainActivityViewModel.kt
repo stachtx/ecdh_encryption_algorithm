@@ -23,15 +23,10 @@ import androidx.annotation.RequiresApi
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.ecca_encryption.database.UserDatabase
+import com.example.ecca_encryption.database.SecuredDatabase
 import com.example.ecca_encryption.entities.User
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.util.*
-import java.util.Calendar.getInstance
 import kotlin.experimental.and
 
 class MainActivityViewModel(private val context: Context) : ViewModel() {
@@ -53,11 +48,12 @@ class MainActivityViewModel(private val context: Context) : ViewModel() {
     private var stringsFirstname = mutableListOf<String>()
     private var stringsCV = mutableListOf<String>()
 
-    private val db: UserDatabase
-        @RequiresApi(Build.VERSION_CODES.O)
+    private val db: SecuredDatabase
+
         get() {
-            return UserDatabase.getInstance(context, encrypted, encryptedWithMemorySecurity)
+            return SecuredDatabase.getInstance(context, encrypted, encryptedWithMemorySecurity)
         }
+
 
     private var _querySize = MutableLiveData<Int>().apply { postValue(DEFAULT_LENGTH) }
     private var _results = MutableLiveData<String>()
@@ -94,19 +90,19 @@ class MainActivityViewModel(private val context: Context) : ViewModel() {
                 encrypted = false
                 encryptedWithMemorySecurity = false
                 val noEncryption = runInsertRounds()
-                if ( noEncryption == RETURN_INTERRUPTED) {
+                if (noEncryption == RETURN_INTERRUPTED) {
                     return@launch
                 }
 
                 encrypted = true
                 val encrypted = runInsertRounds()
-                if ( encrypted == RETURN_INTERRUPTED) {
+                if (encrypted == RETURN_INTERRUPTED) {
                     return@launch
                 }
 
                 encryptedWithMemorySecurity = true
                 val encryptedWithMemorySecurity = runInsertRounds()
-                if ( encryptedWithMemorySecurity == RETURN_INTERRUPTED) {
+                if (encryptedWithMemorySecurity == RETURN_INTERRUPTED) {
                     return@launch
                 }
 
@@ -149,21 +145,21 @@ class MainActivityViewModel(private val context: Context) : ViewModel() {
                 encryptedWithMemorySecurity = false
                 cleanStartForSelect()
                 val noEncryption = runSelectIndexed()
-                if ( noEncryption == RETURN_INTERRUPTED) {
+                if (noEncryption == RETURN_INTERRUPTED) {
                     return@launch
                 }
 
                 encrypted = true
                 cleanStartForSelect()
                 val encrypted = runSelectIndexed()
-                if ( encrypted == RETURN_INTERRUPTED) {
+                if (encrypted == RETURN_INTERRUPTED) {
                     return@launch
                 }
 
                 encryptedWithMemorySecurity = true
                 cleanStartForSelect()
                 val encryptedWithMemorySecurity = runSelectIndexed()
-                if ( encryptedWithMemorySecurity == RETURN_INTERRUPTED) {
+                if (encryptedWithMemorySecurity == RETURN_INTERRUPTED) {
                     return@launch
                 }
 
@@ -200,21 +196,21 @@ class MainActivityViewModel(private val context: Context) : ViewModel() {
                 encryptedWithMemorySecurity = false
                 cleanStartForSelect()
                 val noEncryption = runSelectNotIndexed()
-                if ( noEncryption == RETURN_INTERRUPTED) {
+                if (noEncryption == RETURN_INTERRUPTED) {
                     return@launch
                 }
 
                 encrypted = true
                 cleanStartForSelect()
                 val encrypted = runSelectNotIndexed()
-                if ( encrypted == RETURN_INTERRUPTED) {
+                if (encrypted == RETURN_INTERRUPTED) {
                     return@launch
                 }
 
                 encryptedWithMemorySecurity = true
                 cleanStartForSelect()
                 val encryptedWithMemorySecurity = runSelectNotIndexed()
-                if ( encryptedWithMemorySecurity == RETURN_INTERRUPTED) {
+                if (encryptedWithMemorySecurity == RETURN_INTERRUPTED) {
                     return@launch
                 }
 

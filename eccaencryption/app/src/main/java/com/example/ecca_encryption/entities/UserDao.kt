@@ -19,7 +19,7 @@ package com.example.ecca_encryption.entities
 import androidx.room.*
 
 @Dao
-interface UserDao {
+interface UserDao{
     @Query("SELECT * FROM user")
     fun getAllUsers(): List<User>
 
