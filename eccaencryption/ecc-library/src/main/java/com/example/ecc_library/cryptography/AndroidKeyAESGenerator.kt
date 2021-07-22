@@ -15,7 +15,7 @@ object AndroidKeyAESGenerator {
             KeyGenParameterSpec.Builder(
                 alias,
                 KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
-            ).setKeySize(128).setBlockModes(KeyProperties.BLOCK_MODE_CBC)
+            ).setKeySize(256).setBlockModes(KeyProperties.BLOCK_MODE_CBC)
                 .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
                 .setRandomizedEncryptionRequired(false)
                 .build()

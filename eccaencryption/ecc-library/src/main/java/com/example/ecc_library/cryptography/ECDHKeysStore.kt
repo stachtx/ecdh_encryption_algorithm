@@ -15,15 +15,25 @@ import javax.crypto.spec.IvParameterSpec
 
 object ECDHKeysStore {
 
-    private val ecdhKeysStore: Map<String, ByteArray> = emptyMap()
-
     private const val ALGORITHM = "EC"
     private const val TRANSFORMATION = "AES/CBC/PKCS7Padding"
+
+    private val ecdhKeysStore: MutableMap<String, ByteArray> = mutableMapOf()
+    private val cipher: Cipher = Cipher.getInstance(TRANSFORMATION)
+
+    private var ivBytes: ByteArray? = null;
+
+    private fun createIV() {
+        val r = SecureRandom()
+        val tmp = ByteArray(16)
+        r.nextBytes(tmp)
+        ivBytes = tmp
+    }
 
     fun createECDHKey(alias: String) {
         val keyPair = generateECKeys()
         val encryptedKeyPair = encryptECDHKey(keyPair)
-        ecdhKeysStore.plus(Pair(alias, encryptedKeyPair))
+        ecdhKeysStore[alias] = encryptedKeyPair
     }
 
     fun getECDHKey(alias: String): KeyPair? {
@@ -56,19 +66,19 @@ object ECDHKeysStore {
     }
 
     private fun decryptECDHKey(data: ByteArray?): KeyPair? {
-        val bi = ByteArrayInputStream(Base64.decode(cipher(data, Cipher.DECRYPT_MODE), Base64.DEFAULT))
+        val bi =
+            ByteArrayInputStream(Base64.decode(cipher(data, Cipher.DECRYPT_MODE), Base64.DEFAULT))
         val oi = ObjectInputStream(bi)
         return oi.readObject() as KeyPair
     }
 
     @SuppressLint("GetInstance")
     private fun cipher(data: ByteArray?, mode: Int): ByteArray {
-        val r = SecureRandom()
-        val ivBytes = ByteArray(16)
-        r.nextBytes(ivBytes)
+        if (ivBytes == null) {
+            createIV()
+        }
         val secretKey = getKey()
-        val cipher = Cipher.getInstance(TRANSFORMATION)
-        cipher.init(mode, secretKey,  IvParameterSpec(ivBytes))
+        cipher.init(mode, secretKey, IvParameterSpec(ivBytes))
         return cipher.doFinal(data)
     }
 
