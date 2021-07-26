@@ -15,7 +15,7 @@ import javax.crypto.spec.IvParameterSpec
 
 object ECDHKeysStore {
 
-    private const val ALGORITHM = "EC"
+    private const val ALGORITHM = "ECDH"
     private const val TRANSFORMATION = "AES/CBC/PKCS7Padding"
 
     private val ecdhKeysStore: MutableMap<String, ByteArray> = mutableMapOf()

@@ -17,9 +17,7 @@
 package com.example.ecca_encryption
 
 import android.content.Context
-import android.os.Build
 import android.os.SystemClock
-import androidx.annotation.RequiresApi
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -40,6 +38,7 @@ class MainActivityViewModel(private val context: Context) : ViewModel() {
 
     internal var encrypted = false
     internal var encryptedWithMemorySecurity = false
+    internal var algorithm: Algorithm = Algorithm.NONE
 
     internal var runAll = false
 
@@ -49,9 +48,13 @@ class MainActivityViewModel(private val context: Context) : ViewModel() {
     private var stringsCV = mutableListOf<String>()
 
     private val db: SecuredDatabase
-
         get() {
-            return SecuredDatabase.getInstance(context, encrypted, encryptedWithMemorySecurity)
+            return SecuredDatabase.getInstance(
+                context,
+                algorithm,
+                encrypted,
+                encryptedWithMemorySecurity
+            )
         }
 
 
@@ -87,6 +90,8 @@ class MainActivityViewModel(private val context: Context) : ViewModel() {
         ioScope = CoroutineScope(Dispatchers.IO)
         ioScope.launch {
             if (runAll) {
+
+                algorithm = Algorithm.NONE
                 encrypted = false
                 encryptedWithMemorySecurity = false
                 val noEncryption = runInsertRounds()
@@ -94,31 +99,57 @@ class MainActivityViewModel(private val context: Context) : ViewModel() {
                     return@launch
                 }
 
+                algorithm = Algorithm.ECDH
                 encrypted = true
-                val encrypted = runInsertRounds()
-                if (encrypted == RETURN_INTERRUPTED) {
+                val encryptedEcdh = runInsertRounds()
+                if (encryptedEcdh == RETURN_INTERRUPTED) {
                     return@launch
                 }
 
+
+                algorithm = Algorithm.AES
+                encrypted = true
+                val encryptedAes = runInsertRounds()
+                if (encryptedAes == RETURN_INTERRUPTED) {
+                    return@launch
+                }
+
+                algorithm = Algorithm.ECDH
                 encryptedWithMemorySecurity = true
-                val encryptedWithMemorySecurity = runInsertRounds()
-                if (encryptedWithMemorySecurity == RETURN_INTERRUPTED) {
+                val encryptedWithMemorySecurityECDH = runInsertRounds()
+                if (encryptedWithMemorySecurityECDH == RETURN_INTERRUPTED) {
                     return@launch
                 }
 
-                val encDiff =
-                    percentageDifferenceWithBase(noEncryption.toDouble(), encrypted.toDouble())
-                val encWithMemDiff = percentageDifferenceWithBase(
+                algorithm = Algorithm.AES
+                encryptedWithMemorySecurity = true
+                val encryptedWithMemorySecurityAES = runInsertRounds()
+                if (encryptedWithMemorySecurityAES == RETURN_INTERRUPTED) {
+                    return@launch
+                }
+
+                val encDiffECDH =
+                    percentageDifferenceWithBase(noEncryption.toDouble(), encryptedEcdh.toDouble())
+                val encDiffAES =
+                    percentageDifferenceWithBase(noEncryption.toDouble(), encryptedAes.toDouble())
+                val encWithMemDiffECDH = percentageDifferenceWithBase(
                     noEncryption.toDouble(),
-                    encryptedWithMemorySecurity.toDouble()
+                    encryptedWithMemorySecurityECDH.toDouble()
+                )
+
+                val encWithMemDiffAES = percentageDifferenceWithBase(
+                    noEncryption.toDouble(),
+                    encryptedWithMemorySecurityAES.toDouble()
                 )
 
                 appendResults(
                     "\n\n" +
                             "Inserts\n" +
                             "No Encryption (base):      ${noEncryption}ms \n" +
-                            "Encrypted:                 ${encrypted}ms ${encDiff}%\n" +
-                            "Encrypted+Memory Security: ${encryptedWithMemorySecurity}ms ${encWithMemDiff}%\n"
+                            "Encrypted ECDH:            ${encryptedEcdh}ms ${encDiffECDH}%\n" +
+                            "Encrypted AES:             ${encryptedAes}ms ${encDiffAES}%\n" +
+                            "Encrypted ECDH + Memory Security: ${encryptedWithMemorySecurityECDH}ms ${encWithMemDiffECDH}%\n"+
+                            "Encrypted AES + Memory Security: ${encryptedWithMemorySecurityAES}ms ${encWithMemDiffAES}%\n"
                 )
             } else {
                 runInsertRounds()
@@ -237,7 +268,6 @@ class MainActivityViewModel(private val context: Context) : ViewModel() {
             setUIEnabled(true)
         }
     }
-
 
     internal fun onCancelClicked() {
         ioScope.cancel()
@@ -368,7 +398,7 @@ class MainActivityViewModel(private val context: Context) : ViewModel() {
             db.userDao().deleteAll()
 
             appendResults(
-                "Starting (encrypted: $encrypted, with memory encrypt: $encryptedWithMemorySecurity)...\n"
+                "Starting (algorithm: ${algorithm.name}, encrypted: $encrypted, with memory encrypt: $encryptedWithMemorySecurity)...\n"
             )
         } else {
             setUIEnabled(true)
@@ -379,7 +409,7 @@ class MainActivityViewModel(private val context: Context) : ViewModel() {
 
         // Build the Data Set first, so it is not counted into the SQL time
 
-        val personList = mutableListOf<User>()
+        val users = mutableListOf<User>()
 
         if (buildSelectDS) {
             stringsFirstname.clear()
@@ -396,7 +426,7 @@ class MainActivityViewModel(private val context: Context) : ViewModel() {
                 stringsCV.add(cv.substring(8 + (i % 30), 40 + (i % 100)))
             }
 
-            personList.add(
+            users.add(
                 User(
                     id = i.toLong(),
                     firstName = firstName,
@@ -410,7 +440,7 @@ class MainActivityViewModel(private val context: Context) : ViewModel() {
 
         val start = SystemClock.elapsedRealtime()
 
-        db.userDao().insertUserList(personList)
+        db.userDao().insertUserList(users)
 
         val stop = SystemClock.elapsedRealtime()
 

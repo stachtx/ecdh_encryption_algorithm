@@ -1,11 +1,10 @@
 package com.example.ecca_encryption.database
 
 import android.content.Context
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.room.*
-import com.example.ecc_library.Aliases
-import com.example.ecc_library.cryptography.ECDHKeysStore
+import com.example.ecc_library.cryptography.EncryptionService
+import com.example.ecca_encryption.Algorithm
+import com.example.ecca_encryption.Algorithm.*
 import com.example.ecca_encryption.entities.User
 import com.example.ecca_encryption.entities.UserDao
 import net.sqlcipher.database.SQLiteDatabase
@@ -30,6 +29,7 @@ abstract class SecuredDatabase : RoomDatabase() {
 
         fun getInstance(
             context: Context,
+            algorithm: Algorithm,
             secure: Boolean = false,
             memorySecure: Boolean = false
         ): SecuredDatabase {
@@ -38,6 +38,7 @@ abstract class SecuredDatabase : RoomDatabase() {
                     securedDBSecure ?: synchronized(this) {
                         securedDBSecure ?: buildDatabase(
                             context,
+                            algorithm,
                             secure,
                             memorySecure
                         ).also { securedDBSecure = it }
@@ -46,6 +47,7 @@ abstract class SecuredDatabase : RoomDatabase() {
                     securedDBSecureWithMemorySecurity ?: synchronized(this) {
                         securedDBSecureWithMemorySecurity ?: buildDatabase(
                             context,
+                            algorithm,
                             secure,
                             memorySecure
                         ).also { securedDBSecureWithMemorySecurity = it }
@@ -53,7 +55,7 @@ abstract class SecuredDatabase : RoomDatabase() {
                 }
             } else {
                 securedDB ?: synchronized(this) {
-                    securedDB ?: buildDatabase(context, secure).also {
+                    securedDB ?: buildDatabase(context,algorithm, secure).also {
                         securedDB = it
                     }
                 }
@@ -62,38 +64,59 @@ abstract class SecuredDatabase : RoomDatabase() {
 
         private fun buildDatabase(
             context: Context,
+            algorithm: Algorithm,
             secure: Boolean,
             memorySecure: Boolean = false
         ): SecuredDatabase {
-            val dbname = if (secure && memorySecure) {
-                "encrypted-with-mem"
-            } else if (secure && !memorySecure) {
-                "encrypted"
+            var dbname = "not-encrypted"
+            var factory: SupportFactory? = null
+            if (secure) {
+                var passphrase: ByteArray? = null;
+                val encryptionService = EncryptionService();
+                if (algorithm == AES) {
+                    dbname = "encrypted-aes"
+                    passphrase = encryptionService.prepareKeyECDH()
+                } else if (algorithm == ECDH) {
+                    dbname = "encrypted-ecdh"
+                    passphrase = encryptionService.prepareKeyAES()
+                }
+                if (memorySecure) {
+                    dbname = "$dbname-with-mem"
+                }
+                factory = getSupportFactory(passphrase, memorySecure)
             } else {
-                "not-encrypted"
+                dbname = "encrypted-aes"
             }
             val builder = Room.databaseBuilder(
                 context.applicationContext,
                 SecuredDatabase::class.java, "${dbname}.db"
             )
-            if (secure) {
-                val passphrase: ByteArray? = ECDHKeysStore.getECDHKey(Aliases.ecdhKeysStoreAlias)?.public?.encoded
-                val factory = SupportFactory(passphrase, object : SQLiteDatabaseHook {
-                    override fun preKey(database: SQLiteDatabase?) = Unit
-
-                    override fun postKey(database: SQLiteDatabase?) {
-                        if (memorySecure) {
-                            database?.rawExecSQL(
-                                "PRAGMA cipher_memory_security = ON"
-                            )
-                        } else {
-                            database?.rawExecSQL("PRAGMA cipher_memory_security = OFF")
-                        }
-                    }
-                })
+            if(factory == null) {
                 builder.openHelperFactory(factory)
             }
             return builder.build()
         }
+
+        private fun getSupportFactory(
+            passphrase: ByteArray?,
+            memorySecure: Boolean
+        ): SupportFactory {
+            return SupportFactory(passphrase, object : SQLiteDatabaseHook {
+                override fun preKey(database: SQLiteDatabase?) = Unit
+
+                override fun postKey(database: SQLiteDatabase?) {
+                    if (memorySecure) {
+                        database?.rawExecSQL(
+                            "PRAGMA cipher_memory_security = ON"
+                        )
+                    } else {
+                        database?.rawExecSQL("PRAGMA cipher_memory_security = OFF")
+                    }
+                }
+            })
+        }
+
+
     }
+
 }

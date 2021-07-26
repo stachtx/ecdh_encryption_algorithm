@@ -33,6 +33,7 @@ class MainActivity : AppCompatActivity() {
         AndroidKeyAESGenerator.generateKey(Aliases.androidKeyStoreAliasForECDH)
         AndroidKeyAESGenerator.generateKey(Aliases.androidKeyStoreAlias)
         ECDHKeysStore.createECDHKey(Aliases.ecdhKeysStoreAlias)
+        ECDHKeysStore.createECDHKey(Aliases.ecdhKeysStoreDatabaseAlias)
 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
 
@@ -76,16 +77,31 @@ class MainActivity : AppCompatActivity() {
         binding.securityRadioGroup.setOnCheckedChangeListener { _, checkedId ->
             when (checkedId) {
                 R.id.no_encryption -> {
+                    viewModel.algorithm = Algorithm.NONE
                     viewModel.encrypted = false
                     viewModel.encryptedWithMemorySecurity = false
                     viewModel.runAll = false
                 }
                 R.id.encrypted -> {
+                    viewModel.algorithm = Algorithm.ECDH
                     viewModel.encrypted = true
                     viewModel.encryptedWithMemorySecurity = false
                     viewModel.runAll = false
                 }
                 R.id.encrypted_with_memory_security -> {
+                    viewModel.algorithm = Algorithm.ECDH
+                    viewModel.encrypted = true
+                    viewModel.encryptedWithMemorySecurity = true
+                    viewModel.runAll = false
+                }
+                R.id.encrypted_aes -> {
+                    viewModel.algorithm = Algorithm.AES
+                    viewModel.encrypted = true
+                    viewModel.encryptedWithMemorySecurity = false
+                    viewModel.runAll = false
+                }
+                R.id.encrypted_with_memory_security_aes -> {
+                    viewModel.algorithm = Algorithm.AES
                     viewModel.encrypted = true
                     viewModel.encryptedWithMemorySecurity = true
                     viewModel.runAll = false
