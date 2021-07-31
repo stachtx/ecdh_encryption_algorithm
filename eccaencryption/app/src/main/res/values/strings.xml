@@ -13,9 +13,8 @@
     <string name="encrypted_with_memory_security_aes">Encrypted with AES key and Memory Security</string>
     <string name="run_all_tests">Run Across All DB</string>
     <string name="sqlcipher_performance_with_room">Hybrid encryption performance with Room database</string>
-    <string name="run_x_inserts">Inserts %s objects</string>
-    <string name="select_x_time_indexed">Select %s times indexed</string>
-    <string name="select_x_time_not_indexed">Select %s times not indexed</string>
+    <string name="run_x_inserts">Insert %s objects</string>
+    <string name="select_x_time">Select %s times</string>
     <string name="cancel">Cancel</string>
-    <string name="how_many_transactions">How many transactions?</string>
+    <string name="how_many_transactions">Number of transactions?</string>
 </resources>

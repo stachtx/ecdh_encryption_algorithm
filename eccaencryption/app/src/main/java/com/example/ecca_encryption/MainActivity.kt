@@ -43,9 +43,6 @@ class MainActivity : AppCompatActivity() {
         binding.selectsIndexedButton.setOnClickListener { _ ->
             viewModel.onSelectIndexedClicked()
         }
-        binding.selectsNoindexButton.setOnClickListener { _ ->
-            viewModel.onSelectNoIndexClicked()
-        }
 
         binding.cancelButton.setOnClickListener {
             viewModel.onCancelClicked()
@@ -64,9 +61,9 @@ class MainActivity : AppCompatActivity() {
             ) {
                 if (fromUser) {
                     val length = when (progress) {
-                        1 -> 10000
-                        2 -> 50000
-                        3 -> 100000
+                        1 -> 5000
+                        2 -> 10000
+                        3 -> 15000
                         else -> 1000
                     }
                     viewModel.updateQuerySize(length)

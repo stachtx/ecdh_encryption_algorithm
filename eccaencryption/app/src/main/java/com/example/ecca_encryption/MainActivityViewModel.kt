@@ -172,6 +172,7 @@ class MainActivityViewModel(private val context: Context) : ViewModel() {
         ioScope.launch {
 
             if (runAll) {
+                algorithm = Algorithm.NONE
                 encrypted = false
                 encryptedWithMemorySecurity = false
                 cleanStartForSelect()
@@ -180,89 +181,68 @@ class MainActivityViewModel(private val context: Context) : ViewModel() {
                     return@launch
                 }
 
+                algorithm = Algorithm.ECDH
                 encrypted = true
                 cleanStartForSelect()
-                val encrypted = runSelectIndexed()
-                if (encrypted == RETURN_INTERRUPTED) {
+                val encryptedEcdh = runSelectIndexed()
+                if (encryptedEcdh == RETURN_INTERRUPTED) {
                     return@launch
                 }
 
+
+                algorithm = Algorithm.AES
+                encrypted = true
+                cleanStartForSelect()
+                val encryptedAes = runSelectIndexed()
+                if (encryptedAes == RETURN_INTERRUPTED) {
+                    return@launch
+                }
+
+                algorithm = Algorithm.ECDH
                 encryptedWithMemorySecurity = true
                 cleanStartForSelect()
-                val encryptedWithMemorySecurity = runSelectIndexed()
-                if (encryptedWithMemorySecurity == RETURN_INTERRUPTED) {
+                val encryptedWithMemorySecurityECDH = runSelectIndexed()
+                if (encryptedWithMemorySecurityECDH == RETURN_INTERRUPTED) {
                     return@launch
                 }
 
-                val encDiff =
-                    percentageDifferenceWithBase(noEncryption.toDouble(), encrypted.toDouble())
-                val encWithMemDiff = percentageDifferenceWithBase(
+                algorithm = Algorithm.AES
+                encryptedWithMemorySecurity = true
+                cleanStartForSelect()
+                val encryptedWithMemorySecurityAES = runSelectIndexed()
+                if (encryptedWithMemorySecurityAES == RETURN_INTERRUPTED) {
+                    return@launch
+                }
+
+
+                val encDiffECDH =
+                    percentageDifferenceWithBase(noEncryption.toDouble(), encryptedEcdh.toDouble())
+                val encDiffAES =
+                    percentageDifferenceWithBase(noEncryption.toDouble(), encryptedAes.toDouble())
+                val encWithMemDiffECDH = percentageDifferenceWithBase(
                     noEncryption.toDouble(),
-                    encryptedWithMemorySecurity.toDouble()
+                    encryptedWithMemorySecurityECDH.toDouble()
                 )
+
+                val encWithMemDiffAES = percentageDifferenceWithBase(
+                    noEncryption.toDouble(),
+                    encryptedWithMemorySecurityAES.toDouble()
+                )
+
 
                 appendResults(
                     "\n\n" +
                             "Selects indexed \n" +
                             "No Encryption (base):      ${noEncryption}ms \n" +
-                            "Encrypted:                 ${encrypted}ms ${encDiff}%\n" +
-                            "Encrypted+Memory Security: ${encryptedWithMemorySecurity}ms ${encWithMemDiff}%\n"
+                            "Encrypted ECDH:            ${encryptedEcdh}ms ${encDiffECDH}%\n" +
+                            "Encrypted AES:             ${encryptedAes}ms ${encDiffAES}%\n" +
+                            "Encrypted ECDH + Memory Security: ${encryptedWithMemorySecurityECDH}ms ${encWithMemDiffECDH}%\n"+
+                            "Encrypted AES + Memory Security: ${encryptedWithMemorySecurityAES}ms ${encWithMemDiffAES}%\n"
                 )
 
             } else {
                 cleanStartForSelect()
                 runSelectIndexed()
-            }
-
-            setUIEnabled(true)
-        }
-    }
-
-    private fun runSelectsNotIndexedTests() {
-        ioScope = CoroutineScope(Dispatchers.IO)
-        ioScope.launch {
-
-            if (runAll) {
-                encrypted = false
-                encryptedWithMemorySecurity = false
-                cleanStartForSelect()
-                val noEncryption = runSelectNotIndexed()
-                if (noEncryption == RETURN_INTERRUPTED) {
-                    return@launch
-                }
-
-                encrypted = true
-                cleanStartForSelect()
-                val encrypted = runSelectNotIndexed()
-                if (encrypted == RETURN_INTERRUPTED) {
-                    return@launch
-                }
-
-                encryptedWithMemorySecurity = true
-                cleanStartForSelect()
-                val encryptedWithMemorySecurity = runSelectNotIndexed()
-                if (encryptedWithMemorySecurity == RETURN_INTERRUPTED) {
-                    return@launch
-                }
-
-                val encDiff =
-                    percentageDifferenceWithBase(noEncryption.toDouble(), encrypted.toDouble())
-                val encWithMemDiff = percentageDifferenceWithBase(
-                    noEncryption.toDouble(),
-                    encryptedWithMemorySecurity.toDouble()
-                )
-
-                appendResults(
-                    "\n\n" +
-                            "Selects NOT indexed \n" +
-                            "No Encryption (base):      ${noEncryption}ms \n" +
-                            "Encrypted:                 ${encrypted}ms ${encDiff}%\n" +
-                            "Encrypted+Memory Security: ${encryptedWithMemorySecurity}ms ${encWithMemDiff}%\n"
-                )
-
-            } else {
-                cleanStartForSelect()
-                runSelectNotIndexed()
             }
 
             setUIEnabled(true)
@@ -291,13 +271,6 @@ class MainActivityViewModel(private val context: Context) : ViewModel() {
         runSelectsIndexedTests()
     }
 
-    internal fun onSelectNoIndexClicked() {
-        setUIEnabled(false)
-        clearResults()
-        runSelectsNotIndexedTests()
-    }
-
-
     private fun cleanStartForSelect() {
         deleteAll()
         insertData(0, true)
@@ -324,15 +297,10 @@ class MainActivityViewModel(private val context: Context) : ViewModel() {
 
     private fun runSelectIndexed(): Long {
 
-        // Because this one can be very long, in order to preserve accuracy of the results
-        // and allow cancellation, we will check if we need to cancel only every 500 selects
-        // so we gonna run x batch of 500 selects
-
         val rounds = (length / 500) - 1
 
         val ids = mutableListOf<Long>()
 
-        // first generate all ids randomly, so it is not counted into the time of querying
         for (i in 0..length) {
             ids.add(Random().nextInt(length).toLong())
         }
@@ -359,40 +327,6 @@ class MainActivityViewModel(private val context: Context) : ViewModel() {
         return time
     }
 
-    private fun runSelectNotIndexed(): Long {
-
-        // Because this one can be very long, in order to preserve accuracy of the results
-        // and allow cancellation, we will check if we need to cancel only every 500 selects
-        // so we gonna run x batch of 500 selects
-
-        val rounds = (length / 500) - 1
-
-        stringsFirstname.shuffle()
-
-        val start = SystemClock.elapsedRealtime()
-
-        for (i in 0..rounds) {
-            if (ioScope.isActive) {
-                for (j in 0..499) {
-                    db.userDao().findByFirstName(stringsFirstname[((i * 500) + j)])
-                }
-            } else {
-                setUIEnabled(true)
-                return RETURN_INTERRUPTED
-            }
-        }
-
-        val stop = SystemClock.elapsedRealtime()
-
-        val time = (stop - start)
-
-        appendResults(
-            "Select $length time NOT indexed: ${(time)}ms\n\n"
-        )
-
-        return time
-    }
-
     private fun deleteAll() {
         if (ioScope.isActive) {
             db.userDao().deleteAll()
@@ -407,8 +341,6 @@ class MainActivityViewModel(private val context: Context) : ViewModel() {
 
     private fun insertData(round: Int, buildSelectDS: Boolean = false): Long {
 
-        // Build the Data Set first, so it is not counted into the SQL time
-
         val users = mutableListOf<User>()
 
         if (buildSelectDS) {
@@ -416,12 +348,11 @@ class MainActivityViewModel(private val context: Context) : ViewModel() {
             stringsCV.clear()
         }
         for (i in 0..length) {
-            // Generate random values
+
             val firstName = randomString(8 + (i % 5))
             val cv = randomString(280 + (i % 100))
             if (buildSelectDS) {
-                // if in select mode,
-                // will use some of the values for selects
+
                 stringsFirstname.add(firstName)
                 stringsCV.add(cv.substring(8 + (i % 30), 40 + (i % 100)))
             }
