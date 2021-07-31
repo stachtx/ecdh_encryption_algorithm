@@ -115,8 +115,5 @@ abstract class SecuredDatabase : RoomDatabase() {
                 }
             })
         }
-
-
     }
-
 }

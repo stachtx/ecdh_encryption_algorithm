@@ -46,13 +46,7 @@ object ECDHKeysStore {
             val kpg = KeyPairGenerator.getInstance(ALGORITHM)
             kpg.initialize(256)
             return kpg.generateKeyPair()
-        } catch (e: NoSuchAlgorithmException) {
-            e.printStackTrace()
-            null
-        } catch (e: InvalidAlgorithmParameterException) {
-            e.printStackTrace()
-            null
-        } catch (e: NoSuchProviderException) {
+        } catch (e: Exception) {
             e.printStackTrace()
             null
         }
