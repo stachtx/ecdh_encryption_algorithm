@@ -84,8 +84,6 @@ abstract class SecuredDatabase : RoomDatabase() {
                     dbname = "$dbname-with-mem"
                 }
                 factory = getSupportFactory(passphrase, memorySecure)
-            } else {
-                dbname = "encrypted-aes"
             }
             val builder = Room.databaseBuilder(
                 context.applicationContext,

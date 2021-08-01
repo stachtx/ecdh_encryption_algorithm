@@ -7,12 +7,12 @@
     -->
 
     <string name="no_encryption">No Encryption</string>
-    <string name="encrypted">Encrypted with ECC key</string>
-    <string name="encrypted_with_memory_security">Encrypted with ECC key and Memory Security</string>
-    <string name="encrypted_aes">Encrypted with AES key</string>
-    <string name="encrypted_with_memory_security_aes">Encrypted with AES key and Memory Security</string>
+    <string name="encrypted">Encrypted with AES + ECDH key</string>
+    <string name="encrypted_with_memory_security">Encrypted with AES + ECC key and Memory Security</string>
+    <string name="encrypted_aes">Encrypted with AES</string>
+    <string name="encrypted_with_memory_security_aes">Encrypted with AES and Memory Security</string>
     <string name="run_all_tests">Run Across All DB</string>
-    <string name="sqlcipher_performance_with_room">Hybrid encryption performance with Room database</string>
+    <string name="sqlcipher_performance_with_room">Hybrid encryption performance with SQLLite database</string>
     <string name="run_x_inserts">Insert %s objects</string>
     <string name="select_x_time">Select %s times</string>
     <string name="cancel">Cancel</string>
